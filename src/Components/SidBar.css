@@ -1,0 +1,16 @@
+.SideBar {
+    padding-left: 10px;
+    padding-right: 10px;
+    height: 100%;
+    background-color: #CDCDCD;
+    display: flex;
+    flex-direction: column;
+    width: 100% - 10%;
+}
+
+.logo {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
