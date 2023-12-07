@@ -1,3 +1,18 @@
 .App {
+   display: grid;
+   grid-template-columns: 1fr 3fr;
    height: 100vh;
+}
+
+.Content {
+   display: grid;
+   justify-items: center;
+   align-items: center;
+   grid-template-rows: 4.5fr 0.5fr 0.9fr; 
+}
+
+.Profiles {
+   display: flex;
+   flex-direction: row;
+   gap: 15px;
 }
