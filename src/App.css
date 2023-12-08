@@ -8,11 +8,33 @@
    display: grid;
    justify-items: center;
    align-items: center;
-   grid-template-rows: 4.5fr 0.5fr 0.9fr; 
+   grid-template-rows: 3.5fr 1fr; 
 }
 
 .Profiles {
    display: flex;
    flex-direction: row;
    gap: 15px;
+}
+
+.bottom {
+   display: grid;
+   grid-template-columns: 1fr 1fr;
+   justify-items: self-end;
+   width: 90%;
+}
+
+.bottom .left {
+   display: grid;
+   grid-template-rows: 1fr 1fr;
+   gap: 25px;
+   align-items: center;
+   justify-items: center;
+}
+
+.right {
+   width: 350px;
+   height: 100%;
+   background-color: burlywood;
+   border-radius: 25px;
 }

@@ -1,6 +1,6 @@
-.Card {
-    width: 90%;
-    height: 85%;
+.WebCam {
+    width: 70%;
+    /* height: 85%; */
     border-radius: 25px;
-    background-color: cadetblue;
+    /* background-color: cadetblue; */
 }

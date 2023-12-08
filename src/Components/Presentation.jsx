@@ -1,9 +1,12 @@
 import './Presentation.css';
+import Webcam from 'react-webcam';
 
 function Presentation () {
+    const on = false;
     return (
         <>
-            <div className="Card"></div>
+            {on ? <Webcam className='WebCam'/> : <div className='WebCam' style={{backgroundColor: '#264653', width: '90%', height: '80%'}}></div>}
+            
         </>
     );
 }
