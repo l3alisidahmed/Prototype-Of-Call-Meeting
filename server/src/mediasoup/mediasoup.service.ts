@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import * as mediasoup from 'mediasoup';
-import { Worker } from 'mediasoup/node/lib/types';
+import { Router, Worker } from 'mediasoup/node/lib/types';
 
 @Injectable()
 export class MediasoupService {
@@ -30,4 +30,46 @@ export class MediasoupService {
   };
 
   this_worker = this.createWorker();
+
+  createWebRtcTransport = async (router: Router, callback: any) => {
+    try {
+      const transport = await router.createWebRtcTransport({
+        listenIps: [
+          {
+            ip: '0.0.0.0',
+            announcedIp: '127.0.0.1',
+          },
+        ],
+        enableUdp: true,
+        enableTcp: true,
+        preferUdp: true,
+      });
+
+      transport.on('dtlsstatechange', (dtlsState) => {
+        console.log(`transport id: ${transport.id}`);
+        if (dtlsState === 'closed') {
+          console.log('transport close');
+          transport.close();
+        }
+      });
+
+      callback({
+        params: {
+          id: transport.id,
+          iceParameters: transport.iceParameters,
+          iceCandidates: transport.iceCandidates,
+          dtlsParameters: transport.dtlsParameters,
+        },
+      });
+
+      return transport;
+    } catch (error) {
+      console.error(error);
+      callback({
+        params: {
+          error: error,
+        },
+      });
+    }
+  };
 }
