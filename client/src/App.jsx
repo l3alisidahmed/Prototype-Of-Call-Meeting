@@ -6,7 +6,9 @@ import CallOption from './Components/CallOption'
 import Webcam from 'react-webcam'
 
 function App() {
-  const on = false;
+
+  const on = true;
+
   return (
     <>
       <div className='App'>
@@ -26,8 +28,7 @@ function App() {
                 <CallOption />
               </div>
             </div>
-            {on ? <Webcam style={{width: '100%', borderRadius: '25px', height: '20%'}} /> : <div className='right'></div>}
-            
+            {on ? <Webcam style={{width: '49%', borderRadius: '25px'}} /> : <div className='right'></div>}
           </div>
         </div>
       </div>

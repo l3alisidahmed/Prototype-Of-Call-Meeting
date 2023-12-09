@@ -13,6 +13,7 @@ function CallOption() {
     const [micIcon, setMicIcon] = useState("");
     const [camIcon, setCamIcon] = useState("");
 
+    
     const micClicked = () => {
         if (micIcon == mic) {
             setMicIcon(micOff);
@@ -20,12 +21,12 @@ function CallOption() {
             setMicIcon(mic);
         }
     }
-
+    
     const camClicked = () => {
         if (camIcon == videocam) {
             setCamIcon(videoCamOff);
         } else {
-            setCamIcon(videocam);   
+            setCamIcon(videocam);
         }
     }
     return (
