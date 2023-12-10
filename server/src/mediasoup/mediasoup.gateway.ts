@@ -1,6 +1,10 @@
-import { SubscribeMessage, WebSocketGateway } from '@nestjs/websockets';
+import {
+  SubscribeMessage,
+  WebSocketGateway,
+  WebSocketServer,
+} from '@nestjs/websockets';
 import { MediasoupService } from './mediasoup.service';
-import { Socket } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 import {
   Consumer,
   MediaKind,
@@ -45,11 +49,32 @@ type User = {
   roomName: string;
 };
 
+// User
+// - id
+// - name
+// - socketId
+// - producers
+//   - producerObject[0]
+//     - producer
+//     - producerTransport
+//   - producerObject[1]
+//     - producer
+//     - producerTransport
+// - consumers
+//   - consumerObject[0]
+//     - consumer
+//     - consumerTransport
+//   - consumerObject[1]
+//     - consumer
+//     - consumerTransport
+// - roomName
+
 type Room = {
   id: string;
   name: string;
   router: Router;
   users: User[];
+  producers: Producer[];
   roomAdmin: number;
 };
 
@@ -60,6 +85,9 @@ export class MediasoupGateway {
   private users: User[];
 
   constructor(private readonly mediasoupService: MediasoupService) {}
+
+  @WebSocketServer()
+  server: Server;
 
   @SubscribeMessage('createRoom')
   async createRoom(client: Socket, payload: any): Promise<void> {
@@ -88,6 +116,7 @@ export class MediasoupGateway {
       name: roomName,
       router,
       users: [],
+      producers: [],
       roomAdmin: userId,
     };
     this.rooms.push(newRoom);
@@ -185,80 +214,133 @@ export class MediasoupGateway {
     callback({ id: producer.id });
   }
 
-  // @SubscribeMessage('connectRecvTransport')
-  // async connectRecvTransport(client: Socket, payload: any): Promise<void> {
-  //   const { transportId, dtlsParameters } = payload;
+  @SubscribeMessage('connectRecvTransport')
+  async connectRecvTransport(client: Socket, payload: any): Promise<void> {
+    const { transportId, dtlsParameters } = payload;
 
-  //   // Get UserIndex To Connect Transport
-  //   const userIndex = this.users.findIndex(
-  //     (user) => user.socketId === client.id,
-  //   );
+    // Get UserIndex To Connect Transport
+    const userIndex = this.users.findIndex(
+      (user) => user.socketId === client.id,
+    );
 
-  //   // Get Consumer Transport Id
-  //   const transportIndex = this.users[userIndex].consumers.findIndex(
-  //     (transport) => transport.consumerTransport.id === transportId,
-  //   );
+    // Get Consumer Transport Id
+    const transportIndex = this.users[userIndex].consumers.findIndex(
+      (transport) => transport.consumerTransport.id === transportId,
+    );
 
-  //   // Connect Consumer Transport
-  //   await this.users[userIndex].consumers[
-  //     transportIndex
-  //   ].consumerTransport.connect({
-  //     dtlsParameters,
-  //   });
-  // }
+    // Connect Consumer Transport
+    await this.users[userIndex].consumers[
+      transportIndex
+    ].consumerTransport.connect({
+      dtlsParameters,
+    });
+  }
 
-  // @SubscribeMessage('consume')
-  // async consume(client: Socket, payload: any): Promise<void> {
-  //   const { transportId, producerId, rtpCapabilities, callback } = payload;
+  @SubscribeMessage('consume')
+  async consume(client: Socket, payload: any): Promise<void> {
+    const { transportId, producerId, rtpCapabilities, callback } = payload;
 
-  //   // Get UserIndex To Consume
-  //   const userIndex = this.users.findIndex(
-  //     (user) => user.socketId === client.id,
-  //   );
+    // Get UserIndex To Consume
+    const userIndex = this.users.findIndex(
+      (user) => user.socketId === client.id,
+    );
 
-  //   // Get Transport
-  //   const transportIndex = this.users[userIndex].consumers.findIndex(
-  //     (transport) => transport.consumerTransport.id === transportId,
-  //   );
+    // Get Transport
+    const transportIndex = this.users[userIndex].consumers.findIndex(
+      (transport) => transport.consumerTransport.id === transportId,
+    );
 
-  //   // Get Producer
-  //   const remoteProducer = this.users.find((user) =>
-  //     user.producers.find((producer) => producer.producer.id === producerId),
-  //   );
-  //   const producer = remoteProducer.producers.find(
-  //     (producer) => producer.producer.id === producerId,
-  //   );
+    // Get Remote Producer
+    const remoteProducer = this.users.find((user) =>
+      user.producers.find(
+        (producerObject) => producerObject.producer.id === producerId,
+      ),
+    );
 
-  //   // Create Consumer
-  //   const consumer = await this.users[userIndex].consumers[
-  //     transportIndex
-  //   ].consumerTransport.consume({
-  //     producerId,
-  //     rtpCapabilities,
-  //     paused: producer.producer.kind === 'video',
-  //   });
+    // Get Producer Instance
+    const producerObject = remoteProducer.producers.find(
+      (producerObject) => producerObject.producer.id === producerId,
+    );
 
-  //   // Listen To Consumer Events
-  //   consumer.on('transportclose', () => {
-  //     console.log('consumer transport close');
-  //     consumer.close();
-  //   });
+    // Create Consumer
+    const consumer = await this.users[userIndex].consumers[
+      transportIndex
+    ].consumerTransport.consume({
+      producerId,
+      rtpCapabilities,
+      paused: producerObject.producer.kind === 'video',
+    });
 
-  //   // Save Consumer
-  //   this.users[userIndex].consumers[transportIndex].consumer = consumer;
+    // Listen To Consumer Events
+    consumer.on('transportclose', () => {
+      console.log('consumer transport close');
+      consumer.close();
+    });
 
-  //   // Send Consumer Parameters
-  //   callback({
-  //     producerId,
-  //     id: consumer.id,
-  //     kind: consumer.kind,
-  //     rtpParameters: consumer.rtpParameters,
-  //     type: consumer.type,
-  //   });
+    // producerObject.producer.on('producerclose', () => {
+    //   console.log('producer of consumer closed');
+    // });
 
-  //   // Resume Consumer
-  //   if (producer.producer.kind === 'video') {
-  //     await consumer.resume();
-  //   }
-  // }
+    // Save Consumer
+    this.users[userIndex].consumers[transportIndex].consumer = consumer;
+
+    // Send Consumer Parameters
+    callback({
+      producerId,
+      id: consumer.id,
+      kind: consumer.kind,
+      rtpParameters: consumer.rtpParameters,
+      type: consumer.type,
+    });
+  }
+
+  @SubscribeMessage('resumeConsumer')
+  async resumeComsumer(client: Socket, payload: any): Promise<void> {
+    const { transportId } = payload;
+
+    // Get UserIndex To Resume
+    const userIndex = this.users.findIndex(
+      (user) => user.socketId === client.id,
+    );
+
+    // Get Transport Index
+    const transportIndex = this.users[userIndex].consumers.findIndex(
+      (transport) => transport.consumerTransport.id === transportId,
+    );
+
+    // Resume Consumer
+    await this.users[userIndex].consumers[transportIndex].consumer.resume();
+  }
+
+  @SubscribeMessage('getProducers')
+  async getProducers(client: Socket, payload: any): Promise<void> {
+    const { roomName } = payload;
+  }
+
+  @SubscribeMessage('disconnect')
+  async disconnect(client: Socket): Promise<void> {
+    // Get UserIndex To Disconnect
+    const userIndex = this.users.findIndex(
+      (user) => user.socketId === client.id,
+    );
+
+    // Close All Producer Transports
+    this.users[userIndex].producers.forEach((producerObject) => {
+      producerObject.producerTransport.close();
+      producerObject.producer.close();
+      producerObject.producerTransport = null;
+      producerObject.producer = null;
+    });
+
+    // Close All Consumer Transports
+    this.users[userIndex].consumers.forEach((consumerObject) => {
+      consumerObject.consumerTransport.close();
+      consumerObject.consumer.close();
+      consumerObject.consumerTransport = null;
+      consumerObject.consumer = null;
+    });
+
+    // Delete User
+    this.users = this.users.filter((user) => user.socketId === client.id);
+  }
 }
