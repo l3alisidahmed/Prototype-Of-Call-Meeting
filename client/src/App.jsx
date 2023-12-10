@@ -4,10 +4,10 @@ import Presentation from './Components/Presentation'
 import User from './Components/User'
 import CallOption from './Components/CallOption'
 import Webcam from 'react-webcam'
+import { useState } from 'react'
 
 function App() {
-
-  const on = true;
+  const [turnOn,setTurnOn] = useState(false)
 
   return (
     <>
@@ -15,7 +15,7 @@ function App() {
         <SidBar />
         <div className='Content'>
           <Presentation />
-          <div className='bottom'>
+          <div className={turnOn ? 'bottom' : 'btm'}>
             <div className='left'>
               <div className='Profiles'>
                 <User />
@@ -25,10 +25,10 @@ function App() {
                 <User />
               </div>
               <div>
-                <CallOption />
+                <CallOption turnOn={turnOn} setTurnOn={setTurnOn}/>
               </div>
             </div>
-            {on ? <Webcam style={{width: '49%', borderRadius: '25px'}} /> : <div className='right'></div>}
+            {JSON.parse(localStorage.getItem("on")) && <Webcam style={{width: '40%', borderRadius: '25px'}} />}
           </div>
         </div>
       </div>

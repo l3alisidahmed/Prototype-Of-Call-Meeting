@@ -32,6 +32,14 @@
    justify-items: center;
 }
 
+.btm .left {
+   display: flex;
+   flex-direction: column;
+   justify-content: center;
+   align-items: center;
+   gap: 25px;
+}
+
 .right {
    width: 350px;
    height: 100%;
