@@ -106,7 +106,7 @@ export class MediasoupGateway {
       socketId: client.id,
       producers: [],
       consumers: [],
-      roomName: roomName,
+      roomName: '',
     });
     console.log(`Room Creator UserId: ${userId}`);
 
@@ -127,7 +127,7 @@ export class MediasoupGateway {
 
   @SubscribeMessage('createWebRtcTransport')
   async createWebRtcTransport(client: Socket, payload: any): Promise<void> {
-    const { routerId, isProducer, callback } = payload;
+    const { routerId, isProducer, roomName, callback } = payload;
 
     // Get Router
     const router = this.routers.find((router) => router.id === routerId);
@@ -136,6 +136,9 @@ export class MediasoupGateway {
     const userIndex = this.users.findIndex(
       (user) => user.socketId === client.id,
     );
+
+    // Add Room Name
+    this.users[userIndex].roomName = roomName;
 
     // Check If The User Is Trying To Produce Or Consume
     if (isProducer) {
@@ -315,6 +318,44 @@ export class MediasoupGateway {
   @SubscribeMessage('getProducers')
   async getProducers(client: Socket, payload: any): Promise<void> {
     const { roomName } = payload;
+
+    // Return All Producers Of Room
+    this.server
+      .to(roomName)
+      .emit(
+        'getProducers',
+        this.rooms.find((room) => room.name === roomName).producers,
+      );
+  }
+
+  @SubscribeMessage('leaveRoom')
+  leaveRoom(client: Socket, payload: any): void {
+    const { roomName } = payload;
+    // Get UserIndex To Disconnect
+    const userIndex = this.users.findIndex(
+      (user) => user.socketId === client.id,
+    );
+
+    // Close All Producer Transports
+    this.users[userIndex].producers.forEach((producerObject) => {
+      producerObject.producerTransport.close();
+      producerObject.producer.close();
+      producerObject.producerTransport = null;
+      producerObject.producer = null;
+    });
+
+    // Close All Consumer Transports
+    this.users[userIndex].consumers.forEach((consumerObject) => {
+      consumerObject.consumerTransport.close();
+      consumerObject.consumer.close();
+      consumerObject.consumerTransport = null;
+      consumerObject.consumer = null;
+    });
+
+    // Remove User From Room
+    this.users = this.rooms
+      .find((room) => room.name === roomName)
+      .users.filter((user) => user.socketId === client.id);
   }
 
   @SubscribeMessage('disconnect')
@@ -339,6 +380,11 @@ export class MediasoupGateway {
       consumerObject.consumerTransport = null;
       consumerObject.consumer = null;
     });
+
+    // Remove User From Room
+    this.users = this.rooms
+      .find((room) => room.name === this.users[userIndex].roomName)
+      .users.filter((user) => user.socketId === client.id);
 
     // Delete User
     this.users = this.users.filter((user) => user.socketId === client.id);
