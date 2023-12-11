@@ -23,12 +23,18 @@ function App() {
                 <User />
                 <User />
                 <User />
+                <User />
+                <User />
+                <User />
+                <User />
+                <User />
+                <User />
               </div>
               <div>
                 <CallOption turnOn={turnOn} setTurnOn={setTurnOn}/>
               </div>
             </div>
-            {JSON.parse(localStorage.getItem("on")) && <Webcam style={{width: '40%', borderRadius: '25px'}} />}
+            {JSON.parse(localStorage.getItem("on")) && <Webcam mirrored={true} style={{width: '40%', borderRadius: '25px'}} />}
           </div>
         </div>
       </div>
