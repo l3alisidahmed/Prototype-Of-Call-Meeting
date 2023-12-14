@@ -8,9 +8,9 @@ import EndCall from '../assets/EndCall.svg';
 import videocam from '../assets/videocam.svg';
 import videoCamOff from '../assets/videocam_off.svg';
 import moreOption from '../assets/moreOption.svg';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
-function CallOption({turnOn , setTurnOn}) {
+function CallOption({ func }) {
 
     const [micIcon, setMicIcon] = useState("");
     const [camIcon, setCamIcon] = useState("");
@@ -26,22 +26,12 @@ function CallOption({turnOn , setTurnOn}) {
     const camClicked = () => {
         if (camIcon == videocam) {
             setCamIcon(videoCamOff);
-            setTurnOn(false)
+            func();
         } else {
             setCamIcon(videocam);
-            setTurnOn(true)
+            func();
         }
     }
-
-    useEffect(()=>{
-        if (turnOn) {
-            localStorage.setItem("on" , "false")
-        } else {
-            localStorage.setItem("on" , "true")
-        }
-       
-
-    } , [turnOn])
 
     return (
         <>

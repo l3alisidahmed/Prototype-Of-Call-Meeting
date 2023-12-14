@@ -6,16 +6,23 @@ import CallOption from './Components/CallOption'
 import Webcam from 'react-webcam'
 import { useState } from 'react'
 
+
 function App() {
-  const [turnOn,setTurnOn] = useState(false)
+  const [CamVisible, setCamVisible] = useState(false);
+
+  const onCamClicked = () => {
+    setCamVisible(!CamVisible);
+  }
 
   return (
     <>
       <div className='App'>
         <SidBar />
         <div className='Content'>
-          <Presentation />
-          <div className={turnOn ? 'bottom' : 'btm'}>
+          <div className="top">
+            <Presentation />
+          </div>
+          <div className={CamVisible ? 'bottom' : 'btm'}>
             <div className='left'>
               <div className='Profiles'>
                 <User />
@@ -29,12 +36,26 @@ function App() {
                 <User />
                 <User />
                 <User />
+                <User />
+                <User />
+                <User />
+                <User />
+                <User />
+                <User />
+                <User />
+                <User />
+                <User />
+                <User />
+                <User />
+                <User />
+                <User />
+                <User />
               </div>
               <div>
-                <CallOption turnOn={turnOn} setTurnOn={setTurnOn}/>
+                <CallOption func={onCamClicked}/>
               </div>
             </div>
-            {JSON.parse(localStorage.getItem("on")) && <Webcam mirrored={true} style={{width: '40%', borderRadius: '25px'}} />}
+            {CamVisible && <Webcam mirrored={true} style={{width: '40%', borderRadius: '25px'}} />}
           </div>
         </div>
       </div>
@@ -42,4 +63,4 @@ function App() {
   )
 }
 
-export default App
+export default App;
