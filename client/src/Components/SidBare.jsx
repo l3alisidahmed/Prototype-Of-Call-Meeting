@@ -1,10 +1,14 @@
+/* eslint-disable react/prop-types */
 import Logo from "./Logo";
 import Room from "./Room";
 import './SidBar.css';
 
 const logoName = "E-TeachHub";
+let arr = [];
 
-function SidBar() {
+function SidBar({ Rooms }) {
+    arr.push(Rooms);
+
     return (
         <>
             <div className="SideBar">
@@ -13,10 +17,13 @@ function SidBar() {
                 </div>
                 <div>
                     <Room RoomName="Create a new Room"/>
-                    <Room RoomName="Room_1"/>
-                    <Room RoomName="Room_2"/>
-                    <Room RoomName="Room_3"/>
-                    <Room RoomName="Room_4"/>
+                    {arr.map((element, index) => {
+                        if (element != "") {
+                            return(
+                                <Room RoomName={element} key={index} />
+                            );
+                        }
+                    })}
                 </div>
             </div>
         </>

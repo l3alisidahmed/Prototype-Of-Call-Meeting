@@ -1,0 +1,47 @@
+.content {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: 1fr 3.5fr;
+}
+
+.rightDiv {
+    display: grid;
+    justify-items: center;
+    align-items: center;
+}
+
+.card {
+    width: 50%;
+    height: 40%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: grey;
+    border-radius: 25px;
+    padding: 25px;
+    gap: 25px;
+}
+
+.card .form {
+    margin-top: 25px;
+    height: 45px;
+    width: 60%;
+    border-radius: 15px;
+    padding-block: 8px;
+    padding-inline: 15px;
+    font-size: 20px;
+    border: none;
+}
+
+.form:focus-visible {
+    outline: none;
+}
+
+.btn {
+    margin: 50px;
+    padding: 10px;
+    width: 150px;
+    height: 50px;
+    border-radius: 15px;
+}
