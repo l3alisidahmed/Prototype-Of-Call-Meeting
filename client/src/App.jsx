@@ -1,48 +1,27 @@
 import './App.css';
+import Content from './Components/Content';
+import CreateRoom from './Components/CreateRoom';
 import SidBar from './Components/SidBare';
-import Presentation from './Components/Presentation';
-import User from './Components/User';
-import CallOption from './Components/CallOption';
-import Webcam from 'react-webcam';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { useState } from 'react';
 
 function App() {
-  const [turnOn, setTurnOn] = useState(false);
+  const [RoomName, setRoomName] = useState('');
 
   return (
     <>
-      <div className="App">
-        <SidBar />
-        <div className="Content">
-          <Presentation />
-          <div className={turnOn ? 'bottom' : 'btm'}>
-            <div className="left">
-              <div className="Profiles">
-                <User />
-                <User />
-                <User />
-                <User />
-                <User />
-                <User />
-                <User />
-                <User />
-                <User />
-                <User />
-                <User />
-              </div>
-              <div>
-                <CallOption turnOn={turnOn} setTurnOn={setTurnOn} />
-              </div>
-            </div>
-            {JSON.parse(localStorage.getItem('on')) && (
-              <Webcam
-                mirrored={true}
-                style={{ width: '40%', borderRadius: '25px' }}
-              />
-            )}
-          </div>
+      <Router>
+        <div className="App">
+          <SidBar Rooms={RoomName} />
+          <Routes>
+            <Route
+              path="/"
+              element={<CreateRoom setRoomName={setRoomName} />}
+            />
+            <Route path="/JoinRoom" element={<Content />} />
+          </Routes>
         </div>
-      </div>
+      </Router>
     </>
   );
 }

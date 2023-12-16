@@ -19,6 +19,10 @@ body {
   height: 100vh;
 }
 
+#root {
+  height: 100%;
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
