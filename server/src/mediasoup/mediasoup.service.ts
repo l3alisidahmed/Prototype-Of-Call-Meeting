@@ -1,19 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import * as mediasoup from 'mediasoup';
-import { Router, Worker } from 'mediasoup/node/lib/types';
+import { Router } from 'mediasoup/node/lib/types';
+import { Socket } from 'socket.io';
 
 @Injectable()
 export class MediasoupService {
-  private _worker: Worker;
-
-  public get worker(): Worker {
-    return this._worker;
-  }
-  public set worker(value: Worker) {
-    this._worker = value;
-  }
-
-  private createWorker = async () => {
+  public createWorker = async () => {
     const worker = await mediasoup.createWorker({
       rtcMinPort: 2000,
       rtcMaxPort: 2020,
@@ -29,10 +21,10 @@ export class MediasoupService {
     return worker;
   };
 
-  this_worker = this.createWorker();
-
-  createWebRtcTransport = async (router: Router, callback: any) => {
+  createWebRtcTransport = async (router: Router, client: Socket) => {
     try {
+      console.log(router);
+
       const transport = await router.createWebRtcTransport({
         listenIps: [
           {
@@ -53,7 +45,9 @@ export class MediasoupService {
         }
       });
 
-      callback({
+      console.log('transport connected from create: \nid = ' + transport.id);
+
+      client.emit('createSendTransport', {
         params: {
           id: transport.id,
           iceParameters: transport.iceParameters,
@@ -65,7 +59,7 @@ export class MediasoupService {
       return transport;
     } catch (error) {
       console.error(error);
-      callback({
+      client.emit('createSendTransport', {
         params: {
           error: error,
         },

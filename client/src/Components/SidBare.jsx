@@ -1,33 +1,43 @@
 /* eslint-disable react/prop-types */
-import Logo from "./Logo";
-import Room from "./Room";
+import Logo from './Logo';
+import Room from './Room';
 import './SidBar.css';
 
-const logoName = "E-TeachHub";
-let arr = [];
+const logoName = 'E-TeachHub';
+let roomsList = [];
 
-function SidBar({ Rooms }) {
-    arr.push(Rooms);
+function SidBar({ socket, Rooms }) {
+  roomsList.push(Rooms);
 
-    return (
-        <>
-            <div className="SideBar">
-                <div className="logo">
-                    <Logo LogoName={logoName} />
-                </div>
-                <div>
-                    <Room RoomName="Create a new Room"/>
-                    {arr.map((element, index) => {
-                        if (element != "") {
-                            return(
-                                <Room RoomName={element} key={index} />
-                            );
-                        }
-                    })}
-                </div>
-            </div>
-        </>
-    );
+  const getRooms = () => {
+    socket.emit('getRooms');
+    socket.on('rooms', (rooms) => {
+      roomsList = rooms;
+      console.log(rooms);
+    });
+  };
+
+  getRooms();
+
+  return (
+    <>
+      <div className="SideBar">
+        <div className="logo">
+          <Logo LogoName={logoName} />
+        </div>
+        <div>
+          <Room RoomName="Create a new Room" />
+          {roomsList.map((element, index) => {
+            console.log(element);
+            return <Room RoomName={element.roomName} key={index} />;
+            // if (element != '') {
+            //   return <Room RoomName={element} key={index} />;
+            // }
+          })}
+        </div>
+      </div>
+    </>
+  );
 }
 
 export default SidBar;

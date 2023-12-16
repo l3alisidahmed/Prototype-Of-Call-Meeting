@@ -4,6 +4,10 @@ import CreateRoom from './Components/CreateRoom';
 import SidBar from './Components/SidBare';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { useState } from 'react';
+import io from 'socket.io-client';
+
+// Connect Socket
+const socket = io('http://localhost:3001');
 
 function App() {
   const [RoomName, setRoomName] = useState('');
@@ -12,13 +16,13 @@ function App() {
     <>
       <Router>
         <div className="App">
-          <SidBar Rooms={RoomName} />
+          <SidBar socket={socket} Rooms={RoomName} />
           <Routes>
             <Route
               path="/"
               element={<CreateRoom setRoomName={setRoomName} />}
             />
-            <Route path="/JoinRoom" element={<Content />} />
+            <Route path="/JoinRoom" element={<Content socket={socket} />} />
           </Routes>
         </div>
       </Router>

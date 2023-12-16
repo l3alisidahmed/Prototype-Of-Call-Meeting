@@ -10,6 +10,7 @@ import {
   MediaKind,
   Producer,
   Router,
+  RtpCapabilities,
   Transport,
 } from 'mediasoup/node/lib/types';
 
@@ -72,28 +73,42 @@ type User = {
 type Room = {
   id: string;
   name: string;
-  router: Router;
+  rtpCapabilities: RtpCapabilities;
   users: User[];
   producers: Producer[];
   roomAdmin: number;
 };
 
-@WebSocketGateway()
+@WebSocketGateway(3001, {
+  cors: {
+    origin: '*',
+  },
+})
 export class MediasoupGateway {
-  private routers: Router[];
-  private rooms: Room[];
-  private users: User[];
+  private routers: Router[] = [];
+  private rooms: Room[] = [];
+  private users: User[] = [];
 
   constructor(private readonly mediasoupService: MediasoupService) {}
 
   @WebSocketServer()
   server: Server;
 
+  @SubscribeMessage('getRooms')
+  async getRooms(client: Socket): Promise<void> {
+    client.emit('rooms', this.rooms);
+  }
+
   @SubscribeMessage('createRoom')
-  async createRoom(client: Socket, payload: any): Promise<void> {
-    const { roomName, callback } = payload;
-    const worker = this.mediasoupService.worker;
+  async createRoom(client: Socket, payload: any): Promise<Room> {
+    const { roomName } = payload;
+    const worker = await this.mediasoupService.createWorker();
+    if (!worker) {
+      console.error('mediasoup worker not initialized');
+      return;
+    }
     const router = await worker.createRouter({ mediaCodecs });
+    console.log(router);
     this.routers.push(router);
 
     // Generate User Id
@@ -114,7 +129,7 @@ export class MediasoupGateway {
     const newRoom = {
       id: router.id,
       name: roomName,
-      router,
+      rtpCapabilities: router.rtpCapabilities,
       users: [],
       producers: [],
       roomAdmin: userId,
@@ -122,14 +137,17 @@ export class MediasoupGateway {
     this.rooms.push(newRoom);
     console.log(`Room Id (Router Id): ${router.id}`);
 
-    callback(newRoom);
+    client.emit('roomCreated', newRoom);
   }
 
   @SubscribeMessage('createWebRtcTransport')
   async createWebRtcTransport(client: Socket, payload: any): Promise<void> {
-    const { routerId, isProducer, roomName, callback } = payload;
+    const { routerId, isProducer, roomName } = payload;
 
     // Get Router
+    console.log('Routers: ');
+    console.log(this.routers[0].id);
+    console.log('Router: ' + routerId);
     const router = this.routers.find((router) => router.id === routerId);
 
     // Get UserIndex To Add Transport
@@ -144,7 +162,7 @@ export class MediasoupGateway {
     if (isProducer) {
       // Create Producer Transport
       const producerTransport =
-        await this.mediasoupService.createWebRtcTransport(router, callback);
+        await this.mediasoupService.createWebRtcTransport(router, client);
       this.users[userIndex].producers.push({
         producerTransport,
         producer: null,
@@ -152,7 +170,7 @@ export class MediasoupGateway {
     } else {
       // Create Consumer Transport
       const consumerTransport =
-        await this.mediasoupService.createWebRtcTransport(router, callback);
+        await this.mediasoupService.createWebRtcTransport(router, client);
       this.users[userIndex].consumers.push({
         consumerTransport,
         consumer: null,
@@ -174,6 +192,8 @@ export class MediasoupGateway {
       (transport) => transport.producerTransport.id === transportId,
     );
 
+    console.log('transport connected from connect: \nid = ' + transportId);
+
     // Connect Producer Transport
     await this.users[userIndex].producers[
       transportIndex
@@ -184,7 +204,7 @@ export class MediasoupGateway {
 
   @SubscribeMessage('produce')
   async produce(client: Socket, payload: any): Promise<void> {
-    const { transportId, kind, rtpParameters, callback } = payload;
+    const { transportId, kind, rtpParameters } = payload;
 
     // Get UserIndex To Produce
     const userIndex = this.users.findIndex(
@@ -214,7 +234,7 @@ export class MediasoupGateway {
     this.users[userIndex].producers[transportIndex].producer = producer;
 
     // Send Producer Id
-    callback({ id: producer.id });
+    client.emit('produced', { id: producer.id });
   }
 
   @SubscribeMessage('connectRecvTransport')
