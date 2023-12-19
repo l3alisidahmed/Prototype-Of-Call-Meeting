@@ -3,21 +3,13 @@ import Logo from './Logo';
 import Room from './Room';
 import './SidBar.css';
 
-const logoName = 'E-TeachHub';
-let roomsList = [];
+const logoName = 'Private School';
+// let roomsList = [];
 
-function SidBar({ socket, Rooms }) {
-  roomsList.push(Rooms);
-
-  const getRooms = () => {
-    socket.emit('getRooms');
-    socket.on('rooms', (rooms) => {
-      roomsList = rooms;
-      console.log(rooms);
-    });
-  };
-
-  getRooms();
+function SidBar({ rooms, joinRoom, getProducers }) {
+  // roomsList.push(Rooms);
+  // const [roomsList, setRoomsList] = useState([]);
+  console.log(rooms);
 
   return (
     <>
@@ -26,10 +18,17 @@ function SidBar({ socket, Rooms }) {
           <Logo LogoName={logoName} />
         </div>
         <div>
-          <Room RoomName="Create a new Room" />
-          {roomsList.map((element, index) => {
-            console.log(element);
-            return <Room RoomName={element.roomName} key={index} />;
+          {/* <Room RoomName="Create a new Room" /> */}
+          {rooms.map((room) => {
+            console.log(room);
+            return (
+              <Room
+                roomName={room.id}
+                key={room.id}
+                joinRoom={joinRoom}
+                getProducers={getProducers}
+              />
+            );
             // if (element != '') {
             //   return <Room RoomName={element} key={index} />;
             // }

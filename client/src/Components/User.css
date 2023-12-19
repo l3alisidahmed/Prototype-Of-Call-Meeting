@@ -1,6 +1,9 @@
 .circle {
-    width: 85px;
-    height: 85px;
-    background-color: burlywood;
-    border-radius: 50px;
+  /* width: 85px;
+    height: 85px; */
+  width: 180px;
+  height: 135px;
+  border-radius: 10px;
+  background-color: burlywood;
+  /* border-radius: 50px; */
 }

@@ -1,12 +1,20 @@
 .IconCard {
-    width: moz-fit-content;
-    padding-top: 18px;
-    padding-bottom: 18px;
-    padding-left: 25px;
-    padding-right: 25px;
-    background-color: #363333;
-    border-radius: 50px;
-    display: flex;
-    flex-direction: row;
-    gap: 15px;
+  /* I Modified This */
+  width: 250px;
+  padding-top: 15px;
+  padding-bottom: 15px;
+  /******************/
+  padding-left: 25px;
+  padding-right: 25px;
+  background-color: #363333;
+  border-radius: 50px;
+  display: flex;
+  flex-direction: row;
+  gap: 15px;
+  /* I Added This */
+  position: fixed;
+  bottom: 50px;
+  left: calc(50% - 125px);
+  z-index: 9999;
+  /***************/
 }

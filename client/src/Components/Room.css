@@ -1,22 +1,28 @@
 @import url('https://fonts.googleapis.com/css2?family=Inika&display=swap');
 
 .RoomCard {
-    padding-left: 25px;
-    height: 70px;
-    align-items: center;
-    display: flex;
-    flex-direction: row;
-    gap: 10px;
+  width: 90%;
+  padding-left: 25px;
+  height: 70px;
+  align-items: center;
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  cursor: pointer;
+  transition: 0.4s;
 }
 
 .RoomCard:hover {
-    width: 90%;
-    border-radius: 15px;
-    background-color: #264653bd;
+  border-radius: 7px;
+  background-color: #264653bd;
+}
+
+.diaz {
+  height: 0.9rem;
 }
 
 .RoomName {
-    color: black;
-    font-size: 24px;
-    font-family: 'Inika', serif;
+  color: black;
+  font-size: 0.9rem;
+  font-family: 'Inika', serif;
 }

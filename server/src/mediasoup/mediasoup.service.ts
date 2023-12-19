@@ -21,7 +21,11 @@ export class MediasoupService {
     return worker;
   };
 
-  createWebRtcTransport = async (router: Router, client: Socket) => {
+  createWebRtcTransport = async (
+    router: Router,
+    client: Socket,
+    isProducer: boolean,
+  ) => {
     try {
       console.log(router);
 
@@ -47,23 +51,42 @@ export class MediasoupService {
 
       console.log('transport connected from create: \nid = ' + transport.id);
 
-      client.emit('createSendTransport', {
-        params: {
-          id: transport.id,
-          iceParameters: transport.iceParameters,
-          iceCandidates: transport.iceCandidates,
-          dtlsParameters: transport.dtlsParameters,
-        },
-      });
+      if (isProducer) {
+        client.emit('createSendTransport', {
+          params: {
+            id: transport.id,
+            iceParameters: transport.iceParameters,
+            iceCandidates: transport.iceCandidates,
+            dtlsParameters: transport.dtlsParameters,
+          },
+        });
+      } else {
+        client.emit('createRecvTransport', {
+          params: {
+            id: transport.id,
+            iceParameters: transport.iceParameters,
+            iceCandidates: transport.iceCandidates,
+            dtlsParameters: transport.dtlsParameters,
+          },
+        });
+      }
 
       return transport;
     } catch (error) {
       console.error(error);
-      client.emit('createSendTransport', {
-        params: {
-          error: error,
-        },
-      });
+      if (isProducer) {
+        client.emit('createSendTransport', {
+          params: {
+            error: error,
+          },
+        });
+      } else {
+        client.emit('createRecvTransport', {
+          params: {
+            error: error,
+          },
+        });
+      }
     }
   };
 }

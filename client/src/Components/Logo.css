@@ -1,7 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Inknut+Antiqua:wght@800&display=swap');
 
 .logo-name {
-    color: black;
-    font-size: 32px;
-    font-family: 'Inknut Antiqua', serif;
+  color: rgb(14, 14, 28);
+  font-size: 1.2rem;
+  text-align: left;
+  font-family: 'Inknut Antiqua', sans-serif, serif;
 }

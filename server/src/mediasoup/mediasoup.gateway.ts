@@ -75,7 +75,7 @@ type Room = {
   name: string;
   rtpCapabilities: RtpCapabilities;
   users: User[];
-  producers: Producer[];
+  producers: string[];
   roomAdmin: number;
 };
 
@@ -93,11 +93,6 @@ export class MediasoupGateway {
 
   @WebSocketServer()
   server: Server;
-
-  @SubscribeMessage('getRooms')
-  async getRooms(client: Socket): Promise<void> {
-    client.emit('rooms', this.rooms);
-  }
 
   @SubscribeMessage('createRoom')
   async createRoom(client: Socket, payload: any): Promise<Room> {
@@ -140,6 +135,46 @@ export class MediasoupGateway {
     client.emit('roomCreated', newRoom);
   }
 
+  @SubscribeMessage('joinRoom')
+  joinRoom(client: Socket, payload: any): void {
+    const { roomId, isRoomCreator } = payload;
+
+    console.log('room joined');
+    console.log('roomId = ' + roomId);
+
+    const roomIndex = this.rooms.findIndex((room) => room.id === roomId);
+    const room = this.rooms[roomIndex];
+
+    if (isRoomCreator) {
+      client.emit('joined', room);
+      return;
+    }
+
+    // Generate User Id
+    const userId = Date.now();
+
+    // Create New User
+    const newUser = {
+      id: userId,
+      name: 'Sid Ahmed',
+      socketId: client.id,
+      producers: [],
+      consumers: [],
+      roomName: '',
+    };
+    this.users.push(newUser);
+    console.log(`Room Joiner UserId: ${userId}`);
+
+    console.log('roomIndex = ' + roomIndex);
+    this.rooms[roomIndex].users.push(newUser);
+    client.emit('joined', room);
+  }
+
+  @SubscribeMessage('getRooms')
+  async getRooms(client: Socket): Promise<void> {
+    client.emit('rooms', this.rooms);
+  }
+
   @SubscribeMessage('createWebRtcTransport')
   async createWebRtcTransport(client: Socket, payload: any): Promise<void> {
     const { routerId, isProducer, roomName } = payload;
@@ -156,13 +191,17 @@ export class MediasoupGateway {
     );
 
     // Add Room Name
-    this.users[userIndex].roomName = roomName;
+    this.users[userIndex].roomName = routerId;
 
     // Check If The User Is Trying To Produce Or Consume
     if (isProducer) {
       // Create Producer Transport
       const producerTransport =
-        await this.mediasoupService.createWebRtcTransport(router, client);
+        await this.mediasoupService.createWebRtcTransport(
+          router,
+          client,
+          isProducer,
+        );
       this.users[userIndex].producers.push({
         producerTransport,
         producer: null,
@@ -170,7 +209,11 @@ export class MediasoupGateway {
     } else {
       // Create Consumer Transport
       const consumerTransport =
-        await this.mediasoupService.createWebRtcTransport(router, client);
+        await this.mediasoupService.createWebRtcTransport(
+          router,
+          client,
+          isProducer,
+        );
       this.users[userIndex].consumers.push({
         consumerTransport,
         consumer: null,
@@ -230,8 +273,13 @@ export class MediasoupGateway {
       producer.close();
     });
 
-    // Save Producer
+    // Save Producer In User Instance
     this.users[userIndex].producers[transportIndex].producer = producer;
+
+    // Save Producer In Room Instance
+    this.rooms
+      .find((room) => room.id === this.users[userIndex].roomName)
+      .producers.push(producer.id);
 
     // Send Producer Id
     client.emit('produced', { id: producer.id });
@@ -261,7 +309,7 @@ export class MediasoupGateway {
 
   @SubscribeMessage('consume')
   async consume(client: Socket, payload: any): Promise<void> {
-    const { transportId, producerId, rtpCapabilities, callback } = payload;
+    const { transportId, producerId, rtpCapabilities } = payload;
 
     // Get UserIndex To Consume
     const userIndex = this.users.findIndex(
@@ -308,12 +356,14 @@ export class MediasoupGateway {
     this.users[userIndex].consumers[transportIndex].consumer = consumer;
 
     // Send Consumer Parameters
-    callback({
-      producerId,
-      id: consumer.id,
-      kind: consumer.kind,
-      rtpParameters: consumer.rtpParameters,
-      type: consumer.type,
+    client.emit('consumed', {
+      params: {
+        producerId,
+        id: consumer.id,
+        kind: consumer.kind,
+        rtpParameters: consumer.rtpParameters,
+        type: consumer.type,
+      },
     });
   }
 
@@ -337,15 +387,22 @@ export class MediasoupGateway {
 
   @SubscribeMessage('getProducers')
   async getProducers(client: Socket, payload: any): Promise<void> {
-    const { roomName } = payload;
+    const { roomId } = payload;
+
+    console.log('producers');
+    console.log(roomId);
 
     // Return All Producers Of Room
-    this.server
-      .to(roomName)
-      .emit(
-        'getProducers',
-        this.rooms.find((room) => room.name === roomName).producers,
-      );
+    // this.server
+    //   .to(roomId)
+    //   .emit(
+    //     'producers',
+    //     this.rooms.find((room) => room.id === roomId).producers,
+    //   );
+    client.emit(
+      'producers',
+      this.rooms.find((room) => room.id === roomId).producers,
+    );
   }
 
   @SubscribeMessage('leaveRoom')

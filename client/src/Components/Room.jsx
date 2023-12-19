@@ -1,14 +1,21 @@
 /* eslint-disable react/prop-types */
 import tag from '../assets/diaz.svg';
 import './Room.css';
+import { Link } from 'react-router-dom';
 
-function Room({ RoomName }) {
+function Room({ roomName, joinRoom, getProducers }) {
+  const enterRoom = () => {
+    joinRoom(roomName, false);
+    // getProducers(roomName);
+  };
   return (
     <>
-      <div className="RoomCard">
-        <img src={tag} alt="DIAZ" />
-        <p className="RoomName">{RoomName}</p>
-      </div>
+      <Link to="/room">
+        <div className="RoomCard" onClick={enterRoom}>
+          <img className="diaz" src={tag} alt="DIAZ" />
+          <p className="RoomName">{roomName}</p>
+        </div>
+      </Link>
     </>
   );
 }
